@@ -4,15 +4,10 @@
 import sys
 import numpy as np
 import cv2
-
-sys.path.append('./')
-
-def distance(x, y):
-    return np.sqrt(np.sum((x - y)**2))
-
+from scipy.spatial.distance import cdist
 
 class KMeans():
-    def __init__(self, image, k = 5, out = '',  max_iters = 40):
+    def __init__(self, image, k = 5, out = '',  max_iters = 1000):
         self.k = k 
         self.max_iters = max_iters
         self.output = out
@@ -49,32 +44,19 @@ class KMeans():
         output_image = self.pixel_values(self.centroids, self.clusters)
         cv2.imwrite(self.output, output_image)
 
-    def create_clusters(self, centroids):
-        curr_clusters = [[] for _ in range(self.k)]
-        for i, pixel in enumerate(self.image):
-            idx = self.closest_centroid(pixel, centroids)
-            curr_clusters[idx].append(i)
-        
+    def create_clusters(self, centroids):      
+        distances = cdist(self.image, centroids, metric = 'cityblock')
+        clusters = np.argmin(distances, axis=1)
+
+        curr_clusters = [np.where(clusters == i)[0] for i in range(self.k)]
         return curr_clusters
 
-    def closest_centroid(self, pixel, centroids):
-        distances = [distance(pixel, centroid) for centroid in centroids]
-        closest_idx = np.argmin(distances)
-        return closest_idx
-
     def update_centroids(self, clusters):
-        centroids = []
-
-        for idx, cluster in enumerate(clusters):
-            mean = np.mean(self.image[cluster], axis = 0)
-            centroids.append(mean)
-        
+        centroids = np.array([np.mean(self.image[cluster], axis=0) for cluster in clusters])
         return centroids
     
     def has_converged(self, old_cent, cent):
-        distances = [distance(old_cent[i], cent[i]) for i in range(self.k)]
-
-        return sum(distances) == 0
+        return np.array_equal(old_cent, cent)
 
     def pixel_values(self, centroids, clusters):
         num_pixels = self.image.shape[0]
