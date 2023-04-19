@@ -38,7 +38,7 @@ class KMeans():
             self.centroids = self.update_centroids(self.clusters)
 
             if self.has_converged(old_centroids, self.centroids):
-                print(f'converted in {i} iterations')
+                print(f'converged in {i} iterations')
                 break
 
         output_image = self.pixel_values(self.centroids, self.clusters)
