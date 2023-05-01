@@ -5,6 +5,7 @@ import sys
 import numpy as np
 import cv2
 from scipy.spatial.distance import cdist
+import os
 
 class KMeans():
     def __init__(self, image, k = 5, out = '',  max_iters = 1000):
@@ -78,15 +79,23 @@ class KMeans():
 if __name__ == '__main__':
     
     if len(sys.argv) < 3:
-        print('Usage: python KMeans <input-image> <k> <output-image>')
+        print('Usage: python KMeans.py <input-image> <k> <output-image>')
 
-    try: 
+    try:
         image = cv2.imread(sys.argv[1])
         k = int(sys.argv[2])
         output = sys.argv[3]
 
-        km = KMeans(image = image, k = k, out = output)
-        km.predict() 
+        img_sizes = []
+        for i in range(5):
+            km = KMeans(image = image, k = k, out = output)
+            km.predict()
+            img_sizes.append(os.path.getsize(output))
+
+        img_size = os.path.getsize(sys.argv[1])
+        cr = [img_size/size for size in img_sizes]
+        print(f'For {sys.argv[1]} with k = {k}')
+        print(f'Average CR: {np.mean(cr)} ; Variance: {np.var(cr)}')
 
     except Exception as e: 
         print(e)
